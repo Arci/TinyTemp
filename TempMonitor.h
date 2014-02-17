@@ -4,7 +4,10 @@
 enum {
 	AM_TEMPMONITOR = 240,
 	MAX_READ = 6,
-	TIMER_PERIOD = 5120
+	//READ_PERIOD = 5120,
+	READ_PERIOD = 512,
+	//SEEK_PERIOD = 10240
+	SEEK_PERIOD = 3100
 };
 
 typedef nx_struct TempMonitorMsg {
