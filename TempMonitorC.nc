@@ -38,8 +38,9 @@ implementation {
 			TempRequestMsg* rqst = (TempRequestMsg*) (call Packet.getPayload(&pkt, sizeof(TempRequestMsg)));
 			if (rqst == NULL) return;
 			rqst->nodeid = TOS_BCAST_ADDR;
+			dbg("default", "%s | [SINK] broadcast monitor request\n", sim_time_string(), TOS_NODE_ID);
 			if(call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(TempRequestMsg)) != SUCCESS){
-				dbg("default", "%s | [Node %d] error in sending, repost sendRequest() task\n", sim_time_string(), TOS_NODE_ID);
+				dbg("default", "%s | [SINK] error in sending, repost sendRequest() task\n", sim_time_string(), TOS_NODE_ID);
 				post sendRequest();
 			} else {
 				busy = TRUE;
@@ -69,7 +70,7 @@ implementation {
 		if (err == SUCCESS) {
 			if(TOS_NODE_ID == 0) {
 				call SinkTimer.startPeriodic(SEEK_PERIOD);
-				dbg("default", "%s | [Node %d] started, I'm the sink\n", sim_time_string(), TOS_NODE_ID);
+				dbg("default", "%s | [SINK] started\n", sim_time_string(), TOS_NODE_ID);
 			} else {
 				call ReadTimer.startPeriodic(READ_PERIOD);
 				dbg("default", "%s | [Node %d] started\n", sim_time_string(), TOS_NODE_ID);
@@ -127,13 +128,14 @@ implementation {
 				dbg("default", "%s | [Node %d] is a broadcast request\n", sim_time_string(), TOS_NODE_ID);
 				post sendData();
 			}
-		} else if (len == sizeof(TempMonitorMsg)) {
+		}
+		if(TOS_NODE_ID == 0){
+			if (len == sizeof(TempMonitorMsg)) {
 			TempMonitorMsg* tmmsg = (TempMonitorMsg*) payload;
 			sourceAddr = call AMPacket.source(msg);
-			dbg("default","%s | [Node %d] received monitor packet from %d\n",
+			dbg("default","%s | [SINK] received monitor response from %d\n",
 				sim_time_string(), TOS_NODE_ID, sourceAddr);
-			if(TOS_NODE_ID == 0){
-				dbg("default", "%s | [SINK] Received response %d\n", sim_time_string(), tmmsg->temperature);
+			dbg("default", "%s | [SINK] received response: %d\n", sim_time_string(), tmmsg->temperature);
 			}
 		}
 		return msg;

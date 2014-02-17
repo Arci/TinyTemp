@@ -1,4 +1,3 @@
 COMPONENT=TempMonitorAppC
 CFLAGS += -DCC2420_DEF_RFPOWER=1
 include $(MAKERULES)
-
