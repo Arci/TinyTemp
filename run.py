@@ -2,7 +2,7 @@
 
 N_MOTES = 5
 DBG_CHANNELS = "default error"
-SIM_TIME = 40
+SIM_TIME = 100
 TOPO_FILE = "linkgain.out"
 #NOISE_FILE = "/opt/tinyos-2.1.0/tos/lib/tossim/noise/casino-lab.txt"
 NOISE_FILE = "/opt/tinyos-2.1.2/tos/lib/tossim/noise/meyer-heavy.txt"
@@ -49,7 +49,7 @@ for i in range (0, N_MOTES):
 	m=t.getNode(i)
 	m.bootAtTime(time)
 	m.createNoiseModel()
-	print "Booting ", i, " at ~ ", time*1000/t.ticksPerSecond(), "ms"
+	print "Booting", i, "at ~", time*1000/t.ticksPerSecond(), "ms"
 
 time = t.time()
 lastTime = -1
@@ -57,6 +57,6 @@ while (time + SIM_TIME * t.ticksPerSecond() > t.time()):
 	timeTemp = int(t.time()/(t.ticksPerSecond()*10))
 	if( timeTemp > lastTime ): #stampa un segnale ogni 10 secondi... per leggere meglio il log
 		lastTime = timeTemp
-		print "----------------------------------SIMULATION: ~", lastTime*10, " s ----------------------"
+		print "----------------------------- SIMULATION: ~", lastTime*10, "s ---------------------------"
 	t.runNextEvent()
-print "----------------------------------END OF SIMULATION-------------------------------------"
+print "----------------------------- END OF SIMULATION ----------------------------"
