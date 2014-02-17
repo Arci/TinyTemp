@@ -15,7 +15,12 @@ module TempMonitorC {
 
 implementation {
 
-	uint16_t readVal;
+	uint16_t readVals[6];
+	uint8_t index = -1;
+
+	void increment(){
+		index = index + 1 > 5 ?  0 : index + 1;
+	}
 
 	event void Boot.booted() {
 		dbg("default", "%s | Node started\n", sim_time_string());
@@ -25,7 +30,6 @@ implementation {
 
 	event void Timer.fired() {
 		if(call TempReader.read() == SUCCESS) {
-			dbg("default", "%s | read\n", sim_time_string());
 			call TempReader.read();
 			call Leds.led2Toggle();
 		} else {
@@ -36,9 +40,10 @@ implementation {
 
 	event void TempReader.readDone(error_t result, uint16_t val) {
 		if(result == SUCCESS) {
-			dbg("default", "%s | reading\n", sim_time_string());
 			call Leds.led2Toggle();
-			readVal = val;
+			increment();
+			readVals[index] = val;
+			dbg("default", "%s | reading %i and putting into %i\n", sim_time_string(), val, index);
 		} else {
 			dbg("default", "%s | error in readDone\n", sim_time_string());
 			call Leds.led0Toggle();
