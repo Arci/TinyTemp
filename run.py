@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-N_MOTES = 20
+N_MOTES = 5
 DBG_CHANNELS = "default error"
 SIM_TIME = 20
 TOPO_FILE = "linkgain.out"

@@ -11,5 +11,5 @@ implementation {
 	App.Boot -> MainC;
 	App.Leds -> LedsC;
 	App.Timer -> TimerMilliC;
-	App.Read -> TempSensor;
+	App.TempReader -> TempSensor;
 }

@@ -1,0 +1,6 @@
+.DS_Store
+simbuild/
+app.xml
+TOSSIM.py
+TOSSIM.pyc
+_TOSSIMmodule.so

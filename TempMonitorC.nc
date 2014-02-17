@@ -36,7 +36,7 @@ implementation {
 
 	event void TempReader.readDone(error_t result, uint16_t val) {
 		if(result == SUCCESS) {
-			dbg("default", "%s | reading\n", sim_time_string());
+			dbg("default", "%s | reading %i\n", sim_time_string(), val);
 			call Leds.led2Toggle();
 			readVal = val;
 		} else {
