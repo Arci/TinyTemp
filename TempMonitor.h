@@ -7,7 +7,7 @@ enum {
 	//READ_PERIOD = 5120,
 	READ_PERIOD = 512,
 	//SEEK_PERIOD = 10240
-	SEEK_PERIOD = 3100
+	SINK_PERIOD = 3100
 };
 
 typedef nx_struct TempMonitorMsg {

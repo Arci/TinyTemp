@@ -13,12 +13,12 @@ implementation {
 	components new AMReceiverC(AM_TEMPMONITOR);
 
 	App.Boot -> MainC;
-	App.ReadTimer -> ReadTimer;
 	App.SinkTimer -> SinkTimer;
+	App.ReadTimer -> ReadTimer;
 	App.TempReader -> TempSensor;
+	App.AMControl -> ActiveMessageC;
 	App.Packet -> AMSenderC;
 	App.AMPacket -> AMSenderC;
-	App.AMControl -> ActiveMessageC;
 	App.AMSend -> AMSenderC;
 	App.Receive -> AMReceiverC;
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-N_MOTES = 2
+N_MOTES = 3
 DBG_CHANNELS = "default error"
 SIM_TIME = 20
 TOPO_FILE = "linkgain.out"
@@ -57,6 +57,6 @@ while (time + SIM_TIME * t.ticksPerSecond() > t.time()):
 	timeTemp = int(t.time()/(t.ticksPerSecond()*10))
 	if( timeTemp > lastTime ): #stampa un segnale ogni 10 secondi... per leggere meglio il log
 		lastTime = timeTemp
-		print "----------------------------- SIMULATION: ~", lastTime*10, "s ---------------------------"
+		print "------------------------------------ SIMULATION: ~", lastTime*10, "s ---------------------------------"
 	t.runNextEvent()
-print "----------------------------- END OF SIMULATION ----------------------------"
+print "------------------------------------ END OF SIMULATION ----------------------------------"
