@@ -2,12 +2,11 @@
 #define TEMPMONITOR_H
 
 enum {
+	NUM_NODES = 1, //nodes except sink
 	AM_TEMPMONITOR = 240,
 	MAX_READ = 6,
-	//READ_PERIOD = 5120,
-	READ_PERIOD = 512,
-	//SEEK_PERIOD = 10240
-	SINK_PERIOD = 3100
+	READ_PERIOD = 5120,
+	SINK_PERIOD = 10240
 };
 
 typedef nx_struct TempMonitorMsg {
