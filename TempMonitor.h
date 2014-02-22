@@ -18,4 +18,8 @@ typedef nx_struct TempRequestMsg {
 	nx_uint16_t nodeid;
 } TempRequestMsg;
 
+typedef nx_struct NotReadyMsg {
+	nx_uint16_t nodeid;
+} NotReadyMsg;
+
 #endif

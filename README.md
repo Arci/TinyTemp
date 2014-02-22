@@ -8,3 +8,15 @@ Develop a [TinyOS][tinyos] application to proactively monitor the temperature me
 You can suppose that the sensors and the sink are placed within communication range (i.e., single hop communication). Develop the TinyOS application and test it under TOSSIM.
 
 [tinyos]: http://tinyos.net/
+
+##Compiling and running the simulation
+
+Move into the project folder than simply
+
+```
+make micaz sim
+```
+
+```
+./run.py
+```

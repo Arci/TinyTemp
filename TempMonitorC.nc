@@ -20,9 +20,16 @@ implementation {
 	uint8_t index = 0;
 	message_t pkt;
 	bool busy = FALSE;
+	bool enough_reads = FALSE;
 
 	void increment_index() {
 		index = index + 1 > (MAX_READ - 1) ?  0 : index + 1;
+	}
+
+	void update_enough_reads() {
+		if(index == 0){
+			enough_reads = TRUE;
+		}
 	}
 
 	uint16_t average() {
@@ -37,7 +44,7 @@ implementation {
 	uint16_t choose() {
 		uint16_t rndm = call Random.rand16() & 0xA;
 		dbg("default", "%s | [SINK] rndm is %d\n", sim_time_string(), rndm);
-		if(rndm < 5) {
+		if(rndm > 5) {
 			dbg("default", "%s | [SINK] choosed broadcast request\n", sim_time_string());
 			return TOS_BCAST_ADDR;
 		} else {
@@ -62,16 +69,29 @@ implementation {
 
 	task void sendData() {
 		if (!busy) {
-			TempMonitorMsg* tmpkt = (TempMonitorMsg*) (call Packet.getPayload(&pkt, sizeof(TempMonitorMsg)));
-			if (tmpkt == NULL) return;
-			tmpkt->nodeid = TOS_NODE_ID;
-			tmpkt->temperature = average();
-			if(call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(TempMonitorMsg)) == SUCCESS){
-				dbg("default", "%s | [Node %d] data sent\n", sim_time_string(), TOS_NODE_ID);
-				busy = TRUE;
+			if(enough_reads) {
+				TempMonitorMsg* tmpkt = (TempMonitorMsg*) (call Packet.getPayload(&pkt, sizeof(TempMonitorMsg)));
+				if (tmpkt == NULL) return;
+				tmpkt->nodeid = TOS_NODE_ID;
+				tmpkt->temperature = average();
+				if(call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(TempMonitorMsg)) == SUCCESS){
+					dbg("default", "%s | [Node %d] average sent\n", sim_time_string(), TOS_NODE_ID);
+					busy = TRUE;
+				} else {
+					dbgerror("default", "%s | [Node %d] error, repost sendData() task\n", sim_time_string(), TOS_NODE_ID);
+					post sendData();
+				}
 			} else {
-				dbgerror("default", "%s | [Node %d] error, repost sendData() task\n", sim_time_string(), TOS_NODE_ID);
-				post sendData();
+				NotReadyMsg* ntpkt = (NotReadyMsg*) (call Packet.getPayload(&pkt, sizeof(NotReadyMsg)));
+				if (ntpkt == NULL) return;
+				ntpkt->nodeid = TOS_NODE_ID;
+				if(call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(NotReadyMsg)) == SUCCESS){
+					dbg("default", "%s | [Node %d] not ready sent\n", sim_time_string(), TOS_NODE_ID);
+					busy = TRUE;
+				} else {
+					dbgerror("default", "%s | [Node %d] error, repost sendData() task\n", sim_time_string(), TOS_NODE_ID);
+					post sendData();
+				}
 			}
 		}
 	}
@@ -115,6 +135,9 @@ implementation {
 		if(result == SUCCESS) {
 			increment_index();
 			readVals[index] = val;
+			if(!enough_reads) {
+				update_enough_reads();
+			}
 			dbg("default", "%s | [Node %d] recording temperature -> %d\n", sim_time_string(), TOS_NODE_ID, readVals[index]);
 		} else {
 			dbgerror("default", "%s | [Node %d] error in readDone\n", sim_time_string(), TOS_NODE_ID);
@@ -122,6 +145,7 @@ implementation {
 	}
 
 	/*
+	 * TODO
 	 * pensare e è giusto fare &pkt == msg, potrebbero esserci invii
 	 * concorrenti tali per cui pkt venga sostituito nel frattempo ?
 	 */
@@ -137,7 +161,11 @@ implementation {
 	event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len){
 		am_addr_t sourceAddr;
 		uint16_t delay;
-		if (len == sizeof(TempMonitorMsg)) {
+		if (len == sizeof(NotReadyMsg) && TOS_NODE_ID == 0) {
+			NotReadyMsg* tmmsg = (NotReadyMsg*) payload;
+			sourceAddr = call AMPacket.source(msg);
+			dbg("default", "%s | [SINK] received response from %d, node had few records\n", sim_time_string(), sourceAddr);
+		} else if (len == sizeof(TempMonitorMsg)) {
 			TempMonitorMsg* tmmsg = (TempMonitorMsg*) payload;
 			sourceAddr = call AMPacket.source(msg);
 			if(TOS_NODE_ID == 0) {
@@ -146,24 +174,23 @@ implementation {
 				call SleepTimer.stop();
 				dbg("default", "%s | [Node %d] stop reply timer\n", sim_time_string(), TOS_NODE_ID);
 			}
-		} else {
-			if (len == sizeof(TempRequestMsg)) {
-				TempRequestMsg* trmsg = (TempRequestMsg*) payload;
-				sourceAddr = call AMPacket.source(msg);
-				if(trmsg->nodeid == TOS_NODE_ID){
-					dbg("default", "%s | [Node %d] received monitor request for me\n", sim_time_string(), TOS_NODE_ID);
-					post sendData();
-				} else if(trmsg->nodeid == TOS_BCAST_ADDR){
-					dbg("default", "%s | [Node %d] received broadcast monitor request\n", sim_time_string(), TOS_NODE_ID);
-					delay = call Random.rand16() & 0xA;
-					call SleepTimer.startOneShot(delay);
-					dbg("default", "%s | [Node %d] started delayed (%d) respsone \n", sim_time_string(), TOS_NODE_ID, delay);
-				} else {
-					dbg("default", "%s | [Node %d] received monitor request for %d, ignore\n", sim_time_string(), TOS_NODE_ID, trmsg->nodeid);
-				}
+		} else if (len == sizeof(TempRequestMsg)) {
+			TempRequestMsg* trmsg = (TempRequestMsg*) payload;
+			sourceAddr = call AMPacket.source(msg);
+			if(trmsg->nodeid == TOS_NODE_ID){
+				dbg("default", "%s | [Node %d] received monitor request for me\n", sim_time_string(), TOS_NODE_ID);
+				post sendData();
+			} else if(trmsg->nodeid == TOS_BCAST_ADDR){
+				dbg("default", "%s | [Node %d] received broadcast monitor request\n", sim_time_string(), TOS_NODE_ID);
+				delay = call Random.rand16() & 0xA;
+				call SleepTimer.startOneShot(delay);
+				dbg("default", "%s | [Node %d] started delayed (%d) respsone \n", sim_time_string(), TOS_NODE_ID, delay);
+			} else {
+				dbg("default", "%s | [Node %d] received monitor request for %d, ignore\n", sim_time_string(), TOS_NODE_ID, trmsg->nodeid);
 			}
+		} else {
+			dbgerror("default", "%s | [Node %d] received unknown packet\n", sim_time_string(), TOS_NODE_ID);
 		}
 		return msg;
 	}
-
 }
