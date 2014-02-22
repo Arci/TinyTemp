@@ -196,7 +196,7 @@ implementation {
 				dbg("default", "%s | [Node %d] received broadcast monitor request\n", sim_time_string(), TOS_NODE_ID);
 				delay = call Random.rand16() & 0xA;
 				call SleepTimer.startOneShot(delay);
-				dbg("default", "%s | [Node %d] started delayed (%d) respsone \n", sim_time_string(), TOS_NODE_ID, delay);
+				dbg("default", "%s | [Node %d] started delayed (%d) respsone\n", sim_time_string(), TOS_NODE_ID, delay);
 			} else {
 				dbg("default", "%s | [Node %d] received monitor request for %d, ignore\n", sim_time_string(), TOS_NODE_ID, trmsg->nodeid);
 			}
