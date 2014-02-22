@@ -2,7 +2,7 @@
 #define TEMPMONITOR_H
 
 enum {
-	NUM_NODES = 1, //nodes except sink
+	NUM_NODES = 3, //nodes except sink
 	AM_TEMPMONITOR = 240,
 	MAX_READ = 6,
 	READ_PERIOD = 5120,
