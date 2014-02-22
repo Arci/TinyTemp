@@ -2,7 +2,7 @@
 #define TEMPMONITOR_H
 
 enum {
-	NUM_NODES = 3, //nodes except sink
+	N_MOTES = 3,
 	AM_TEMPMONITOR = 240,
 	MAX_READ = 6,
 	READ_PERIOD = 5120,
@@ -19,7 +19,7 @@ typedef nx_struct TempRequestMsg {
 } TempRequestMsg;
 
 typedef nx_struct NotReadyMsg {
-	nx_uint16_t nodeid;
+	//nx_uint16_t nodeid;
 } NotReadyMsg;
 
 #endif

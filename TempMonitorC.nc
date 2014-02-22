@@ -48,9 +48,12 @@ implementation {
 			dbg("default", "%s | [SINK] choosed broadcast request\n", sim_time_string());
 			return TOS_BCAST_ADDR;
 		} else {
-			uint16_t node = call Random.rand16() & NUM_NODES;
-			dbg("default", "%s | [SINK] selected node is %d\n", sim_time_string(), node);
-			return node;
+			uint16_t nodeid;
+			do {
+				nodeid = call Random.rand16() & (N_MOTES - 1);
+			} while(nodeid == 0);
+			dbg("default", "%s | [SINK] selected node is %d\n", sim_time_string(), nodeid);
+			return nodeid;
 		}
 	}
 
@@ -67,33 +70,32 @@ implementation {
 		}
 	}
 
-	task void sendData() {
+	error_t sendData() {
 		if (!busy) {
 			if(enough_reads) {
 				TempMonitorMsg* tmpkt = (TempMonitorMsg*) (call Packet.getPayload(&pkt, sizeof(TempMonitorMsg)));
-				if (tmpkt == NULL) return;
+				if (tmpkt == NULL) return FAIL;
 				tmpkt->nodeid = TOS_NODE_ID;
 				tmpkt->temperature = average();
 				if(call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(TempMonitorMsg)) == SUCCESS){
 					dbg("default", "%s | [Node %d] average sent\n", sim_time_string(), TOS_NODE_ID);
 					busy = TRUE;
-				} else {
-					dbgerror("default", "%s | [Node %d] error, repost sendData() task\n", sim_time_string(), TOS_NODE_ID);
-					post sendData();
+					return SUCCESS;
 				}
+				return FAIL;
 			} else {
 				NotReadyMsg* ntpkt = (NotReadyMsg*) (call Packet.getPayload(&pkt, sizeof(NotReadyMsg)));
-				if (ntpkt == NULL) return;
-				ntpkt->nodeid = TOS_NODE_ID;
+				if (ntpkt == NULL) return FAIL;
+				//ntpkt->nodeid = TOS_NODE_ID;
 				if(call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(NotReadyMsg)) == SUCCESS){
 					dbg("default", "%s | [Node %d] not ready sent\n", sim_time_string(), TOS_NODE_ID);
 					busy = TRUE;
-				} else {
-					dbgerror("default", "%s | [Node %d] error, repost sendData() task\n", sim_time_string(), TOS_NODE_ID);
-					post sendData();
+					return SUCCESS;
 				}
+				return FAIL;
 			}
 		}
+		return FAIL;
 	}
 
 	event void Boot.booted() {
@@ -128,7 +130,10 @@ implementation {
 	// TODO think: maybe posting a task may cancel the benefit of delayed send adding more delay
 	event void SleepTimer.fired() {
 		dbg("default", "%s | [Node %d] sleep timer fired\n", sim_time_string(), TOS_NODE_ID);
-		post sendData();
+		if(sendData() != SUCCESS) {
+			dbgerror("default", "%s | [Node %d] error, redo sendData()\n", sim_time_string(), TOS_NODE_ID);
+			sendData();
+		}
 	}
 
 	event void TempReader.readDone(error_t result, uint16_t val) {
@@ -161,10 +166,14 @@ implementation {
 	event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len){
 		am_addr_t sourceAddr;
 		uint16_t delay;
-		if (len == sizeof(NotReadyMsg) && TOS_NODE_ID == 0) {
-			NotReadyMsg* tmmsg = (NotReadyMsg*) payload;
+		if (len == sizeof(NotReadyMsg)) {
+			//NotReadyMsg* tmmsg = (NotReadyMsg*) payload;
 			sourceAddr = call AMPacket.source(msg);
-			dbg("default", "%s | [SINK] received response from %d, node had few records\n", sim_time_string(), sourceAddr);
+			if(TOS_NODE_ID == 0) {
+				dbg("default", "%s | [SINK] received response from %d, node had few records\n", sim_time_string(), sourceAddr);
+			} else {
+				dbg("default", "%s | [Node %d] received not ready of %d, ignore\n", sim_time_string(), TOS_NODE_ID, sourceAddr);
+			}
 		} else if (len == sizeof(TempMonitorMsg)) {
 			TempMonitorMsg* tmmsg = (TempMonitorMsg*) payload;
 			sourceAddr = call AMPacket.source(msg);
@@ -179,7 +188,10 @@ implementation {
 			sourceAddr = call AMPacket.source(msg);
 			if(trmsg->nodeid == TOS_NODE_ID){
 				dbg("default", "%s | [Node %d] received monitor request for me\n", sim_time_string(), TOS_NODE_ID);
-				post sendData();
+				if(sendData() != SUCCESS) {
+					dbgerror("default", "%s | [Node %d] error, redo sendData()\n", sim_time_string(), TOS_NODE_ID);
+					sendData();
+				}
 			} else if(trmsg->nodeid == TOS_BCAST_ADDR){
 				dbg("default", "%s | [Node %d] received broadcast monitor request\n", sim_time_string(), TOS_NODE_ID);
 				delay = call Random.rand16() & 0xA;
