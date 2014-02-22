@@ -32,7 +32,7 @@ implementation {
 		}
 	}
 
-	uint16_t average() {
+	float average() {
 		float sum = 0;
 		uint8_t i = 0;
 		for(; i < MAX_READ; i++){

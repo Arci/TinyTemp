@@ -9,7 +9,7 @@ implementation {
 	components new TimerMilliC() as SinkTimer;
 	components new TimerMilliC() as ReadTimer;
 	components new TimerMilliC() as SleepTimer;
-	components new DemoSensorC() as TempSensor;
+	components new RandomSensorAppC() as TempSensor;
 	components ActiveMessageC;
 	components new AMSenderC(AM_TEMPMONITOR);
 	components new AMReceiverC(AM_TEMPMONITOR);
