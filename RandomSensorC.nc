@@ -1,17 +1,11 @@
-generic module RandomSensorC() {
+generic configuration RandomSensorC() {
 	provides interface Read<uint16_t>;
-	uses interface Random;
 }
 
 implementation {
+	components new RandomReaderC();
+	components RandomC;
 
-	task void generateRandomRead() {
-		signal Read.readDone(SUCCESS, call Random.rand16() & 0x64);
-	}
-
-	command error_t Read.read() {
-		post generateRandomRead();
-		return SUCCESS;
-	}
-
+	RandomReaderC = Read;
+	RandomReaderC.Random -> RandomC;
 }

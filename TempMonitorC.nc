@@ -71,12 +71,14 @@ implementation {
 	}
 
 	error_t sendData() {
+		uint32_t temp;
 		if (!busy) {
 			if(enough_reads) {
 				TempMonitorMsg* tmpkt = (TempMonitorMsg*) (call Packet.getPayload(&pkt, sizeof(TempMonitorMsg)));
 				if (tmpkt == NULL) return FAIL;
 				tmpkt->nodeid = TOS_NODE_ID;
-				tmpkt->temperature = average();
+				*(float*)&temp = average();
+				tmpkt->temperature = temp;
 				if(call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(TempMonitorMsg)) == SUCCESS){
 					dbg("default", "%s | [Node %d] average sent\n", sim_time_string(), TOS_NODE_ID);
 					busy = TRUE;
@@ -178,7 +180,10 @@ implementation {
 			TempMonitorMsg* tmmsg = (TempMonitorMsg*) payload;
 			sourceAddr = call AMPacket.source(msg);
 			if(TOS_NODE_ID == 0) {
-				dbg("default", "%s | [SINK] received response from %d, average temperature -> %d\n", sim_time_string(), sourceAddr, tmmsg->temperature);
+				float temp;
+            	uint32_t temperature = tmmsg->temperature;
+            	temp = *(float*)&temperature;
+				dbg("default", "%s | [SINK] received response from %d, average temperature -> %f\n", sim_time_string(), sourceAddr, temp);
 			} else if(call SleepTimer.isRunning()) {
 				call SleepTimer.stop();
 				dbg("default", "%s | [Node %d] stop reply timer\n", sim_time_string(), TOS_NODE_ID);
