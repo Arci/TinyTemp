@@ -48,13 +48,13 @@ implementation {
 	uint16_t choose() {
 		uint16_t rndm = call Random.rand16() % 2;
 		if(rndm) {
-			dbg("default", "%s | [SINK] (rndm: %d) request %d broadcast\n", sim_time_string(), rndm, requestid);
+			dbg("default", "%s | [SINK] (%d) (request %d) broadcast\n", sim_time_string(), rndm, requestid);
 			return TOS_BCAST_ADDR;
 		} else {
 			uint16_t nodeid;
 			nodeid = call Random.rand16() % (N_MOTES - 1);
 			nodeid++;
-			dbg("default", "%s | [SINK] (rndm: %d) request %d to node %d\n", sim_time_string(), rndm, requestid, nodeid);
+			dbg("default", "%s | [SINK] (%d) (request %d) to node %d\n", sim_time_string(), rndm, requestid, nodeid);
 			return nodeid;
 		}
 	}
@@ -216,7 +216,7 @@ implementation {
 			TempMonitorMsg* tmmsg = (TempMonitorMsg*) payload;
 			sourceAddr = call AMPacket.source(msg);
 			handleTempMonitor(tmmsg->requestid, sourceAddr, tmmsg->temperature);
-		} else if (len == sizeof(TempRequestMsg) && TOS_NODE_ID != 0) {
+		} else if (len == sizeof(TempRequestMsg) && !sink()) {
 			TempRequestMsg* trmsg = (TempRequestMsg*) payload;
 			sourceAddr = call AMPacket.source(msg);
 			last_request = trmsg->requestid;
