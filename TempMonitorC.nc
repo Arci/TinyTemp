@@ -6,7 +6,7 @@ module TempMonitorC {
 	uses interface Timer<TMilli> as ReadTimer;
 	uses interface Timer<TMilli> as SinkTimer;
 	uses interface Timer<TMilli> as SleepTimer;
-	uses interface Read<uint32_t> as TempReader;
+	uses interface Read<uint16_t> as TempReader;
 	uses interface Packet;
 	uses interface AMPacket;
 	uses interface AMSend;
@@ -16,7 +16,7 @@ module TempMonitorC {
 
 implementation {
 
-	uint32_t readVals[MAX_READ];
+	uint16_t readVals[MAX_READ];
 	uint8_t index = 0;
 	uint16_t requestid = 0;
 	uint16_t last_request;
@@ -139,7 +139,7 @@ implementation {
 		}
 	}
 
-	event void TempReader.readDone(error_t result, uint32_t val) {
+	event void TempReader.readDone(error_t result, uint16_t val) {
 		if(result == SUCCESS) {
 			increment_index();
 			readVals[index] = val;

@@ -1,12 +1,12 @@
 generic module RandomReaderC() {
-	provides interface Read<uint32_t>;
+	provides interface Read<uint16_t>;
 	uses interface Random;
 }
 
 implementation {
 
 	task void generateRandomRead() {
-		signal Read.readDone(SUCCESS, call Random.rand32() % 100);
+		signal Read.readDone(SUCCESS, call Random.rand16() % 100);
 	}
 
 	command error_t Read.read() {
