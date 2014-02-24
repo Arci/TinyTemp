@@ -10,18 +10,16 @@ enum {
 };
 
 typedef nx_struct TempMonitorMsg {
-	nx_uint16_t nodeid;
 	nx_uint16_t requestid;
 	nx_uint32_t temperature;
 } TempMonitorMsg;
 
 typedef nx_struct TempRequestMsg {
-	nx_uint16_t requestid;
 	nx_uint16_t nodeid;
+	nx_uint16_t requestid;
 } TempRequestMsg;
 
 typedef nx_struct NotReadyMsg {
-	nx_uint16_t nodeid;
 	nx_uint16_t requestid;
 	nx_uint8_t numreads;
 } NotReadyMsg;

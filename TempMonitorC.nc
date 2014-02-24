@@ -41,6 +41,10 @@ implementation {
 		return sum / MAX_READ;
 	}
 
+	bool root() {
+		return TOS_NODE_ID == 0;
+	}
+
 	uint16_t choose() {
 		uint16_t rndm = call Random.rand16() % 2;
 		if(rndm) {
@@ -75,7 +79,6 @@ implementation {
 			if(ready) {
 				TempMonitorMsg* tmpkt = (TempMonitorMsg*) (call Packet.getPayload(&pkt, sizeof(TempMonitorMsg)));
 				if (tmpkt == NULL) return FAIL;
-				tmpkt->nodeid = TOS_NODE_ID;
 				*(float*)&temp = average();
 				tmpkt->temperature = temp;
 				tmpkt->requestid = last_request;
@@ -88,7 +91,6 @@ implementation {
 			} else {
 				NotReadyMsg* ntpkt = (NotReadyMsg*) (call Packet.getPayload(&pkt, sizeof(NotReadyMsg)));
 				if (ntpkt == NULL) return FAIL;
-				ntpkt->nodeid = TOS_NODE_ID;
 				ntpkt->numreads = index;
 				ntpkt->requestid = last_request;
 				if(call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(NotReadyMsg)) == SUCCESS){
@@ -108,7 +110,7 @@ implementation {
 
 	event void AMControl.startDone(error_t err) {
 		if (err == SUCCESS) {
-			if(TOS_NODE_ID == 0) {
+			if(root()) {
 				call SinkTimer.startPeriodic(SINK_PERIOD);
 			} else {
 				call ReadTimer.startPeriodic(READ_PERIOD);
@@ -167,13 +169,13 @@ implementation {
 		if (len == sizeof(NotReadyMsg)) {
 			NotReadyMsg* nrmsg = (NotReadyMsg*) payload;
 			sourceAddr = call AMPacket.source(msg);
-			if(TOS_NODE_ID == 0) {
+			if(root()) {
 				dbg("default", "%s | [SINK] (request %d) node %d had only %d records\n", sim_time_string(), nrmsg->requestid, sourceAddr, nrmsg->numreads);
 			}
 		} else if (len == sizeof(TempMonitorMsg)) {
 			TempMonitorMsg* tmmsg = (TempMonitorMsg*) payload;
 			sourceAddr = call AMPacket.source(msg);
-			if(TOS_NODE_ID == 0) {
+			if(root()) {
 				float temp;
             	uint32_t temperature = tmmsg->temperature;
             	temp = *(float*)&temperature;
