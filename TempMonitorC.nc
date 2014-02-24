@@ -6,7 +6,7 @@ module TempMonitorC {
 	uses interface Timer<TMilli> as ReadTimer;
 	uses interface Timer<TMilli> as SinkTimer;
 	uses interface Timer<TMilli> as SleepTimer;
-	uses interface Read<uint16_t> as TempReader;
+	uses interface Read<uint32_t> as TempReader;
 	uses interface Packet;
 	uses interface AMPacket;
 	uses interface AMSend;
@@ -16,7 +16,7 @@ module TempMonitorC {
 
 implementation {
 
-	uint16_t readVals[MAX_READ];
+	uint32_t readVals[MAX_READ];
 	uint8_t index = 0;
 	uint16_t requestid = 0;
 	uint16_t last_request;
@@ -42,15 +42,14 @@ implementation {
 	}
 
 	uint16_t choose() {
-		uint16_t rndm = call Random.rand16() % 10;
-		if(rndm > 5) {
+		uint16_t rndm = call Random.rand16() % 2;
+		if(rndm) {
 			dbg("default", "%s | [SINK] (%d) choosed broadcast request\n", sim_time_string(), rndm);
 			return TOS_BCAST_ADDR;
 		} else {
 			uint16_t nodeid;
-			do {
-				nodeid = call Random.rand16() & (N_MOTES - 1);
-			} while(nodeid == 0);
+			nodeid = call Random.rand16() % (N_MOTES - 1);
+			nodeid++;
 			dbg("default", "%s | [SINK] request %d to node %d\n", sim_time_string(), requestid, nodeid);
 			return nodeid;
 		}
@@ -140,14 +139,14 @@ implementation {
 		}
 	}
 
-	event void TempReader.readDone(error_t result, uint16_t val) {
+	event void TempReader.readDone(error_t result, uint32_t val) {
 		if(result == SUCCESS) {
 			increment_index();
 			readVals[index] = val;
 			if(!ready) {
 				check_ready();
 			}
-			//dbg("default", "%s | [Node %d] recording temperature -> %d\n", sim_time_string(), TOS_NODE_ID, readVals[index]);
+			dbg("default", "%s | [Node %d] recording temperature -> %d\n", sim_time_string(), TOS_NODE_ID, readVals[index]);
 		} else {
 			dbgerror("default", "%s | [Node %d] error in readDone\n", sim_time_string(), TOS_NODE_ID);
 		}

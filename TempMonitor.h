@@ -2,7 +2,7 @@
 #define TEMPMONITOR_H
 
 enum {
-	N_MOTES = 3,
+	N_MOTES = 4,
 	AM_TEMPMONITOR = 240,
 	MAX_READ = 6,
 	READ_PERIOD = 5120,
