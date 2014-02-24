@@ -9,6 +9,12 @@ You can suppose that the sensors and the sink are placed within communication ra
 
 [tinyos]: http://tinyos.net/
 
+##Configuring the project
+Set the needed number of motes (`N_MOTES` constant) both in:
+
+- `TempMonitor.h`
+- `run.py`
+
 ##Compiling and running the simulation
 
 Move into the project folder than simply

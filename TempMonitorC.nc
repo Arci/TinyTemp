@@ -48,13 +48,13 @@ implementation {
 	uint16_t choose() {
 		uint16_t rndm = call Random.rand16() % 2;
 		if(rndm) {
-			dbg("default", "%s | [SINK] (%d) (request %d) broadcast\n", sim_time_string(), rndm, requestid);
+			dbg("default", "%s | [ SINK ] (request %d) (rndm: %d) broadcast\n", sim_time_string(), rndm, requestid);
 			return TOS_BCAST_ADDR;
 		} else {
 			uint16_t nodeid;
 			nodeid = call Random.rand16() % (N_MOTES - 1);
 			nodeid++;
-			dbg("default", "%s | [SINK] (%d) (request %d) to node %d\n", sim_time_string(), rndm, requestid, nodeid);
+			dbg("default", "%s | [ SINK ] (request %d) (rndm: %d) to node %d\n", sim_time_string(), rndm, requestid, nodeid);
 			return nodeid;
 		}
 	}
@@ -67,7 +67,7 @@ implementation {
 			if(call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(TempRequestMsg)) == SUCCESS){
 				busy = TRUE;
 			} else {
-				dbgerror("error", "%s | [SINK] error, repost sendRequest() task\n", sim_time_string());
+				dbgerror("error", "%s | [ SINK ] error, repost sendRequest() task\n", sim_time_string());
 				post sendRequest();
 			}
 		}
@@ -122,7 +122,7 @@ implementation {
 
 	void handleNotReady(uint16_t rid, am_addr_t sourceAddr, uint8_t numreads) {
 		if(sink()) {
-			dbg("default", "%s | [SINK] (request %d) node %d had only %d records\n", sim_time_string(), rid, sourceAddr, numreads);
+			dbg("default", "%s | [ SINK ] (request %d) node %d had only %d records\n", sim_time_string(), rid, sourceAddr, numreads);
 		}
 	}
 
@@ -130,7 +130,7 @@ implementation {
 		if(sink()) {
 			float temp;
         	temp = *(float*)&temperature;
-			dbg("default", "%s | [SINK] (request %d) node %d average temperature -> %f\n", sim_time_string(), rid, sourceAddr, temp);
+			dbg("default", "%s | [ SINK ] (request %d) node %d average temperature -> %f\n", sim_time_string(), rid, sourceAddr, temp);
 		} else if(call SleepTimer.isRunning()) {
 			call SleepTimer.stop();
 			dbg("default", "%s | [Node %d] (request %d) node %d already replyed\n", sim_time_string(), TOS_NODE_ID, rid, sourceAddr);
@@ -143,8 +143,8 @@ implementation {
 			sendData();
 		} else if(nodeid == TOS_BCAST_ADDR){
 			uint16_t delay;
-			dbg("default", "%s | [Node %d] (request %d) broadcast \n", sim_time_string(), TOS_NODE_ID, last_request);
-			delay = call Random.rand16() % 10;
+			dbg("default", "%s | [Node %d] (request %d) broadcast\n", sim_time_string(), TOS_NODE_ID, last_request);
+			delay = call Random.rand16() % 100;
 			call SleepTimer.startOneShot(delay);
 			dbg("default", "%s | [Node %d] started delayed (%d) response\n", sim_time_string(), TOS_NODE_ID, delay);
 		} else {
